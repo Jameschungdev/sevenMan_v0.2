@@ -1,23 +1,38 @@
+<!--Canvas-->
+<canvas id ="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+
 <!-- Sources Socket.io -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.js"></script>
 
 <script>
+    //ctx canvas info, drawing context
+    var ctx = document.getElementById("ctx").getContext("2d");
+    ctx.font = '30px Arial';
+    
     //(R1) requests socket file and initialises connection (connects).
     var socket = io();
-    //assign random variable to client
-    var random = Math.random();
 
+    /* //Example of client listening and sending
     //Client sends message to server
     var happy = function(){
         socket.emit('happy',{ //emit happy to server
-            reason:'birthday'+random, //extra data as object:reason 
+            reason:'birthday', //extra data as object:reason 
         }); 
     }
-   
+    happy();
     //Client listens for message from server
     socket.on('serverMsg',function(output){ //listen for client 'happy', execute. 
         console.log('Server says '+output.msg);
     });
-</script>
+    */
 
-<button onclick="happy()">Happy Send to Server</button>
+    //Client listens for newPosition of client from server
+    socket.on('newPositions',function(position){ //listen for client 'happy', execute. 
+        ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+        for(var i = 0; i < position.length; i++){
+            ctx.fillText(position[i].no, position[i].x, position[i].y);
+        }
+        
+    });
+    
+</script>
