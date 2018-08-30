@@ -1,0 +1,23 @@
+<!-- Sources Socket.io -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.js"></script>
+
+<script>
+    //(R1) requests socket file and initialises connection (connects).
+    var socket = io();
+    //assign random variable to client
+    var random = Math.random();
+
+    //Client sends message to server
+    var happy = function(){
+        socket.emit('happy',{ //emit happy to server
+            reason:'birthday'+random, //extra data as object:reason 
+        }); 
+    }
+   
+    //Client listens for message from server
+    socket.on('serverMsg',function(output){ //listen for client 'happy', execute. 
+        console.log('Server says '+output.msg);
+    });
+</script>
+
+<button onclick="happy()">Happy Send to Server</button>
