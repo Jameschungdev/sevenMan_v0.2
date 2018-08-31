@@ -21,24 +21,94 @@ serv.listen(2000); //listening for request for port 2000. Use localhost:2000 for
 console.log("Server started."); //states success when server starts when cmd node app.js
 
 //List of client connections
-var CLIENT_LIST = {};
-var clientNo = 0;
+var SOCKET_LIST = {};
+var PLAYER_LIST = {};
+var socketNo = 0;
+
+
+var Player = function(id){
+    var self = {
+        x:250,
+        y:250,
+        id:id,
+        number:socketNo,
+        pressingRight:false,
+        pressingLeft:false,
+        pressingUp:false,
+        pressingDown:false,
+        maxSpd:10,
+    }
+    self.updatePosition = function(){
+        if(self.pressingRight)
+            self.x += self.maxSpd;
+        if(self.pressingLeft)
+            self.x -= self.maxSpd;
+        if(self.pressingTop)
+            self.y -= self.maxSpd;
+        if(self.pressingDown)
+            self.y += self.maxSpd;
+    }
+    return self;
+}
+
+//Map List and Levels
+var TEAM_LIST = [];//tbc to put in groups of 4
+
+//Enemies constrictor to be deleted
+/*
+function Enemy(x,y){
+    this.x = 50;
+    this.y = 50;
+}
+
+var enemy = new Enemy(50,50);
+var enemy2 = new Enemy(100,100);
+
+enemy = {
+    x : 50,
+    y : 50,
+}*/
 
 //(R1) loads socket.io and initialises it.
 var io = require('socket.io')(serv,{});
+
 //whenever a user connects, this function(socket) runs.
-io.sockets.on('connection',function(client){ 
-    clientNo++; //increment client number to differentiate
-    client.id = clientNo;
-    client.x = 0;
-    client.y = 0;
-    client.no = client.id; //can be replaced with name in future.
-    CLIENT_LIST[clientNo] = client;
-    console.log('Client '+clientNo+' connection successful.');
+io.sockets.on('connection',function(socket){ 
+
+    //Needs fixing... Wanted to prevent very long arrays.
+    //Look for free slot in CLIENT_LIST, else take last spot
+    /*for(var i = 0; i<CLIENT_LIST.length;i++){
+        if(CLIENT_LIST[i]===null){
+            clientNo = i;
+            break;
+        }
+        clientNo = CLIENT_LIST.length;//takes up last new spot
+    }*/
+
+    socketNo++; //increment client number to differentiate
+    socket.id = socketNo;
+    SOCKET_LIST[socket.id] = socket;
+
+    var player = Player(socket.id);
+    PLAYER_LIST[socket.id]=player;
+
+    console.log('Client '+socket.id+' connection successful.');
 
     //Remove player when disconnecting
-    client.on('disconnect',function(){
-        delete CLIENT_LIST[client.id];
+    socket.on('disconnect',function(){
+        delete SOCKET_LIST[socket.id];
+        delete PLAYER_LIST[socket.id];
+    });
+
+    socket.on('keyPress',function(data){
+        if(data.inputId === 'left')
+            player.pressingLeft = data.state;
+        else if(data.inputId === 'right')
+            player.pressingRight = data.state;
+        else if(data.inputId === 'up')
+            player.pressingUp = data.state;
+        else if(data.inputId === 'down')
+            player.pressingDown = data.state;
     });
 
     /* //Example of server listening and sending
@@ -62,24 +132,32 @@ setInterval(function(){ //for every 40ms/ every frame...
     var pack = []; //create a new clean package of data to send out every frame
 
     //calculate and put into package
-    for(var i in CLIENT_LIST){ //increment positions
-        var client = CLIENT_LIST[i];
-        client.x ++;
-        client.y ++;
+    for(var i in PLAYER_LIST){ //increment positions
+        var player = PLAYER_LIST[i];
+        player.updatePosition();
 
         pack.push({ //push data of new position into packet
-            x:client.x,
-            y:client.y,
-            no:client.no,
+            x:player.x,
+            y:player.y,
+            number:player.number,
         });
     }
 
-    for (var i in CLIENT_LIST){
-        var client = CLIENT_LIST[i];
-        client.emit('newPositions',pack); //must send package to each player connected to server
+    for (var i in SOCKET_LIST){
+        var socket = SOCKET_LIST[i];
+        socket.emit('newPositions',pack); //must send package to each player connected to server
     }
-    
+
+    /*
+    var packE = [];
+    packE.push({ //push data of new position into packet
+        x:enemy.x,
+        y:enemy.y,
+    });
+    client.emit('newPositionsE',packE);
+    */
 },1000/25);
 
 
-//cont. 4:26
+//tutorial 4 next
+//making black red.
