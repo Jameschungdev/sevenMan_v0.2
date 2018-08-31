@@ -27,12 +27,34 @@
     */
 
     //Client listens for newPosition of client from server
-    socket.on('newPositions',function(position){ //listen for client 'happy', execute. 
+    socket.on('newPositions',function(position){ //listen for client 'newPosition', execute. 
         ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
         for(var i = 0; i < position.length; i++){
-            ctx.fillText(position[i].no, position[i].x, position[i].y);
+            ctx.fillText(position[i].number, position[i].x, position[i].y);
         }
         
     });
+
+    //SEND KEYBOARD STATES
+    document.onkeydown = function(event){
+        if(event.keyCode === 68) //d
+            socket.emit('keyPress',{inputId:'right',state:true});
+        else if(event.keyCode === 83) //s
+            socket.emit('keyPress',{inputId:'down',state:true});
+        else if(event.keyCode === 65) //a
+            socket.emit('keyPress',{inputId:'left',state:true});
+        else if(event.keyCode === 87) //w
+            socket.emit('keyPress',{inputId:'up',state:true});
+    }
+    document.onkeyup = function(event){
+        if(event.keyCode === 68) //d
+            socket.emit('keyPress',{inputId:'right',state:false});
+        else if(event.keyCode === 83) //s
+            socket.emit('keyPress',{inputId:'down',state:false});
+        else if(event.keyCode === 65) //a
+            socket.emit('keyPress',{inputId:'left',state:false});
+        else if(event.keyCode === 87) //w
+            socket.emit('keyPress',{inputId:'up',state:false});
+    }
     
 </script>
