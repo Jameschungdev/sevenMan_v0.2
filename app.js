@@ -22,12 +22,29 @@ console.log("Server started."); //states success when server starts when cmd nod
 
 //List of client connections
 var SOCKET_LIST = {};
-var PLAYER_LIST = {};
+//var PLAYER_LIST = {}; //Replaced with Player.list
 var socketNo = 0;
 
+var Entity = function(){
+    var self = {
+        x:250,
+        y:250,
+        spdX:0,
+        spdY:0,
+        id:"",
+    }
+    self.update = function(){
+        self.updatePosition();
+    }
+    self.updatePosition = function(){
+        self.x += self.spdX;
+        self.y += self.spdY;
+    }
+    return self;
+}
 
 var Player = function(id){
-    var self = {
+    /*var self = {
         x:250,
         y:250,
         id:id,
@@ -37,19 +54,56 @@ var Player = function(id){
         pressingUp:false,
         pressingDown:false,
         maxSpd:10,
-    }
+    }*/
+    //above put using Entity object
+    var self = Entity();
+    self.id = id;
+    self.number = socketNo;
+    self.pressingRight = false;
+    self.pressingLeft = false;
+    self.pressingUp = false;
+    self.pressingDown = false;
+    self.maxSpd = 10;
+
+    /*
     self.updatePosition = function(){
         if(self.pressingRight)
             self.x += self.maxSpd;
         if(self.pressingLeft)
             self.x -= self.maxSpd;
-        if(self.pressingTop)
+        if(self.pressingUp)
             self.y -= self.maxSpd;
         if(self.pressingDown)
             self.y += self.maxSpd;
     }
     return self;
+    */
+
+    var super_update = self.update;
+    self.update = function(){
+        self.updateSpd();
+        super_update();
+    }
+
+    self.updateSpd = function(){
+        if(self.pressingRight)
+            self.spdX = self.maxSpd;
+        else if(self.pressingLeft)
+            self.spdX = -self.maxSpd;
+        else
+            self.spdX = 0;
+
+        if(self.pressingUp)
+            self.spdY = self.maxSpd;
+        else if(self.pressingDown)
+            self.spdY = -self.maxSpd;
+        else
+            self.spdY = 0;
+    }
+    Player.list[id]=self; //(A2) Moved from io socket init
+    return self;
 }
+Player.list = {};
 
 //Map List and Levels
 var TEAM_LIST = [];//tbc to put in groups of 4
@@ -90,7 +144,7 @@ io.sockets.on('connection',function(socket){
     SOCKET_LIST[socket.id] = socket;
 
     var player = Player(socket.id);
-    PLAYER_LIST[socket.id]=player;
+    //PLAYER_LIST[socket.id]=player; //(A1)Moved to Player object so it makes it automatically.
 
     console.log('Client '+socket.id+' connection successful.');
 
@@ -159,5 +213,5 @@ setInterval(function(){ //for every 40ms/ every frame...
 },1000/25);
 
 
-//tutorial 4 next
+//tutorial 5 next 4:42 after Player.list
 //making black red.
