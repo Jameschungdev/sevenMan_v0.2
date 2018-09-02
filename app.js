@@ -94,9 +94,9 @@ var Player = function(id){
             self.spdX = 0;
 
         if(self.pressingUp)
-            self.spdY = self.maxSpd;
-        else if(self.pressingDown)
             self.spdY = -self.maxSpd;
+        else if(self.pressingDown)
+            self.spdY = self.maxSpd;
         else
             self.spdY = 0;
     }
@@ -104,6 +104,80 @@ var Player = function(id){
     return self;
 }
 Player.list = {};
+Player.onConnect = function(socket){
+    var player = Player(socket.id);
+    socket.on('keyPress',function(data){
+        if(data.inputId === 'left')
+            player.pressingLeft = data.state;
+        else if(data.inputId === 'right')
+            player.pressingRight = data.state;
+        else if(data.inputId === 'up')
+            player.pressingUp = data.state;
+        else if(data.inputId === 'down')
+            player.pressingDown = data.state;
+    });
+
+}
+Player.onDisconnect = function(socket){
+    delete Player.list[socket.id];
+}
+Player.update = function(){
+    var pack = []; //create a new clean package of data to send out every frame
+
+    //calculate and put into package
+    for(var i in Player.list){ //increment positions
+        var player = Player.list[i];
+        player.update();
+
+        pack.push({ //push data of new position into packet
+            x:player.x,
+            y:player.y,
+            number:player.number,
+        });
+    }
+    return pack;
+}
+
+//Bullet
+var Bullet = function(angle){
+    var self = Entity();
+    self.id = Math.random();
+    self.spdX = Math.cos(angle/180*Math.PI)*10;
+    self.spdY = Math.sin(angle/180*Math.PI)*10;
+
+    self.timer = 0;
+    self.toRemove = false;
+    var super_update = self.update;
+    self.update = function(){
+        if(self.timer++ > 100) //increment and compare
+            self.toRemove = true;
+        super_update();
+    }
+    Bullet.list[self.id] = self;
+    return self;
+}
+Bullet.list = {};
+
+Bullet.update = function(){
+
+    if(Math.random()<0.1){
+        Bullet(Math.random()*360);
+    }
+
+    var pack = []; //create a new clean package of data to send out every frame
+
+    //calculate and put into package
+    for(var i in Bullet.list){ //increment positions
+        var bullet = Bullet.list[i];
+        bullet.update();
+
+        pack.push({ //push data of new position into packet
+            x:bullet.x,
+            y:bullet.y,
+        });
+    }
+    return pack;
+}
 
 //Map List and Levels
 var TEAM_LIST = [];//tbc to put in groups of 4
@@ -143,28 +217,19 @@ io.sockets.on('connection',function(socket){
     socket.id = socketNo;
     SOCKET_LIST[socket.id] = socket;
 
-    var player = Player(socket.id);
+    
     //PLAYER_LIST[socket.id]=player; //(A1)Moved to Player object so it makes it automatically.
-
+    Player.onConnect(socket);
     console.log('Client '+socket.id+' connection successful.');
 
     //Remove player when disconnecting
     socket.on('disconnect',function(){
         delete SOCKET_LIST[socket.id];
-        delete PLAYER_LIST[socket.id];
+        Player.onDisconnect(socket);
+        
     });
 
-    socket.on('keyPress',function(data){
-        if(data.inputId === 'left')
-            player.pressingLeft = data.state;
-        else if(data.inputId === 'right')
-            player.pressingRight = data.state;
-        else if(data.inputId === 'up')
-            player.pressingUp = data.state;
-        else if(data.inputId === 'down')
-            player.pressingDown = data.state;
-    });
-
+    
     /* //Example of server listening and sending
     //Server sends a message
     var hello = function(){
@@ -183,19 +248,12 @@ io.sockets.on('connection',function(socket){
 
 //loop for canvas/game drawing
 setInterval(function(){ //for every 40ms/ every frame...
-    var pack = []; //create a new clean package of data to send out every frame
-
-    //calculate and put into package
-    for(var i in PLAYER_LIST){ //increment positions
-        var player = PLAYER_LIST[i];
-        player.updatePosition();
-
-        pack.push({ //push data of new position into packet
-            x:player.x,
-            y:player.y,
-            number:player.number,
-        });
+    var pack = {
+        player:Player.update(),
+        bullet:Bullet.update(),
     }
+    
+        
 
     for (var i in SOCKET_LIST){
         var socket = SOCKET_LIST[i];
@@ -213,5 +271,5 @@ setInterval(function(){ //for every 40ms/ every frame...
 },1000/25);
 
 
-//tutorial 5 next 4:42 after Player.list
+//add enemies next, spawn and move randomly
 //making black red.
