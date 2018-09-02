@@ -29,10 +29,14 @@
     //Client listens for newPosition of client from server
     socket.on('newPositions',function(position){ //listen for client 'newPosition', execute. 
         ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
-        for(var i = 0; i < position.length; i++){
-            ctx.fillText(position[i].number, position[i].x, position[i].y);
+        //Enemies draw
+        for(var i = 0; i < position.player.length; i++){
+            ctx.fillText(position.player[i].number, position.player[i].x, position.player[i].y);
         }
-        
+        //Bullets draw
+        for(var i = 0; i < position.bullet.length; i++){
+            ctx.fillRect(position.bullet[i].x-5, position.bullet[i].y-5, 10, 10);
+        }
     });
 
     //SEND KEYBOARD STATES
