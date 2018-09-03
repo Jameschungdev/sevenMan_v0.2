@@ -179,6 +179,48 @@ Bullet.update = function(){
     return pack;
 }
 
+//Enemy
+var Enemy = function(angle){
+    var self = Entity();
+    self.id = Math.random();
+    self.spdX = Math.cos(angle/180*Math.PI)*10;
+    self.spdY = Math.sin(angle/180*Math.PI)*10;
+
+    self.timer = 0;
+    self.toRemove = false;
+    var super_update = self.update;
+    self.update = function(){
+        if(self.timer++ > 100) //increment and compare
+            self.toRemove = true;
+        super_update();
+    }
+    Enemy.list[self.id] = self;
+    return self;
+}
+Enemy.list = {};
+
+Enemy.update = function(){
+
+    if(Math.random()<0.1){
+        Enemy(Math.random()*360);
+    }
+
+    var pack = []; //create a new clean package of data to send out every frame
+
+    //calculate and put into package
+    for(var i in Enemy.list){ //increment positions
+        var enemy = Enemy.list[i];
+        enemy.update();
+
+        pack.push({ //push data of new position into packet
+            x:enemy.x,
+            y:enemy.y,
+        });
+    }
+    return pack;
+}
+//EnemyEnd
+
 //Map List and Levels
 var TEAM_LIST = [];//tbc to put in groups of 4
 
@@ -251,6 +293,7 @@ setInterval(function(){ //for every 40ms/ every frame...
     var pack = {
         player:Player.update(),
         bullet:Bullet.update(),
+        enemy:Enemy.update(),
     }
     
         
