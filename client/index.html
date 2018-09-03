@@ -37,6 +37,10 @@
         for(var i = 0; i < position.bullet.length; i++){
             ctx.fillRect(position.bullet[i].x-5, position.bullet[i].y-5, 10, 10);
         }
+        //Enemies draw
+        for(var i = 0; i < position.enemy.length; i++){
+            ctx.fillRect(position.enemy[i].x-10, position.enemy[i].y-10, 20, 20);
+        }
     });
 
     //SEND KEYBOARD STATES
