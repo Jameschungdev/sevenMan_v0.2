@@ -63,6 +63,11 @@ var Player = function(id){
     self.pressingLeft = false;
     self.pressingUp = false;
     self.pressingDown = false;
+
+    self.pressingLeftMouse = false;
+    self.pressingRightMouse = false;
+    self.mouseAngle = 0;
+
     self.maxSpd = 10;
 
     /*
@@ -83,6 +88,17 @@ var Player = function(id){
     self.update = function(){
         self.updateSpd();
         super_update();
+
+        //Bullet spawn
+        if(self.pressingAttack){
+            self.shootBullet(self.mouseAngle);
+        }
+    }
+
+    self.shootBullet = function(angle){ //bullet shoot function, which links to the bullet spawn
+        var b = Bullet(angle);
+            b.x = self.x; //set position to center of current player
+            b.y = self.y;
     }
 
     self.updateSpd = function(){
@@ -115,6 +131,12 @@ Player.onConnect = function(socket){
             player.pressingUp = data.state;
         else if(data.inputId === 'down')
             player.pressingDown = data.state;
+        
+        //mouse
+        else if(data.inputId === 'attack')
+            player.pressingAttack = data.state;
+        else if(data.inputId === 'mouseAngle')
+            player.mouseAngle = data.state;
     });
 
 }
@@ -160,9 +182,10 @@ Bullet.list = {};
 
 Bullet.update = function(){
 
-    if(Math.random()<0.1){
-        Bullet(Math.random()*360);
-    }
+    //Bullet spawn moved to player function
+    /*if(Math.random()<0.1){
+        Enemy(Math.random()*360); //generate Enemy
+    }*/
 
     var pack = []; //create a new clean package of data to send out every frame
 
@@ -170,6 +193,8 @@ Bullet.update = function(){
     for(var i in Bullet.list){ //increment positions
         var bullet = Bullet.list[i];
         bullet.update();
+
+        if (bullet.toRemove == true) delete Bullet.list[i]; //remove bullet properly
 
         pack.push({ //push data of new position into packet
             x:bullet.x,
@@ -180,12 +205,13 @@ Bullet.update = function(){
 }
 
 //Enemy
-var Enemy = function(angle){
+var Enemy = function(angle){ //Generates an enemy
     var self = Entity();
     self.id = Math.random();
-    self.spdX = Math.cos(angle/180*Math.PI)*10;
-    self.spdY = Math.sin(angle/180*Math.PI)*10;
+    self.spdX = Math.cos(angle/180*Math.PI)*Math.random()*10;
+    self.spdY = Math.sin(angle/180*Math.PI)*Math.random()*10;
 
+    /* //Removal Timer
     self.timer = 0;
     self.toRemove = false;
     var super_update = self.update;
@@ -193,20 +219,21 @@ var Enemy = function(angle){
         if(self.timer++ > 100) //increment and compare
             self.toRemove = true;
         super_update();
-    }
+    }*/
+
     Enemy.list[self.id] = self;
     return self;
 }
 Enemy.list = {};
 
 Enemy.update = function(){
-
+    
+    
     if(Math.random()<0.1){
-        Enemy(Math.random()*360);
+        Enemy(Math.random()*360); //generate Enemy
     }
-
+    
     var pack = []; //create a new clean package of data to send out every frame
-
     //calculate and put into package
     for(var i in Enemy.list){ //increment positions
         var enemy = Enemy.list[i];
@@ -223,21 +250,6 @@ Enemy.update = function(){
 
 //Map List and Levels
 var TEAM_LIST = [];//tbc to put in groups of 4
-
-//Enemies constrictor to be deleted
-/*
-function Enemy(x,y){
-    this.x = 50;
-    this.y = 50;
-}
-
-var enemy = new Enemy(50,50);
-var enemy2 = new Enemy(100,100);
-
-enemy = {
-    x : 50,
-    y : 50,
-}*/
 
 //(R1) loads socket.io and initialises it.
 var io = require('socket.io')(serv,{});
@@ -316,3 +328,8 @@ setInterval(function(){ //for every 40ms/ every frame...
 
 //add enemies next, spawn and move randomly
 //making black red.
+//skipped chat ep6
+
+//next to do
+//right click dash (+attack)
+//next next different mobs
