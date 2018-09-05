@@ -41,6 +41,10 @@
         for(var i = 0; i < position.enemy.length; i++){
             ctx.fillRect(position.enemy[i].x-10, position.enemy[i].y-10, 20, 20);
         }
+        //Shields draw
+        for(var i = 0; i < position.shield.length; i++){
+            ctx.fillRect(position.shield[i].x-5, position.shield[i].y-5, 40, 10);
+        }
     });
 
     //SEND KEYBOARD STATES
@@ -82,5 +86,38 @@
         socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
     }
 
+    //Right mouse click
+    var rightMouseClicked = false;
+
+    function handleMouseDown(e) {
+    //e.button describes the mouse button that was clicked
+    // 0 is left, 1 is middle, 2 is right
+    if (e.button === 2) {
+        rightMouseClicked = true;
+        socket.emit('keyPress',{inputId:'shield',state:true}); //send shield
+    } else if (e.button === 0) {  
+        //Do something if left button was clicked and right button is still pressed
+        if (rightMouseClicked) {
+        console.log('hello'); //add shield and sword weak attack
+        //code
+        }
+    }
+    console.log(rightMouseClicked);
+    }
+
+    function handleMouseUp(e) {
+    if (e.button === 2) {
+        rightMouseClicked = false;
+        socket.emit('keyPress',{inputId:'shield',state:false}); //send reset shield
+    }
+    console.log(rightMouseClicked);
+    }
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('contextmenu', function(e) { //prevents menu option being pressed
+        e.preventDefault();
+    });
+    //Right mouse click End
     
 </script>
