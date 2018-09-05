@@ -93,10 +93,20 @@ var Player = function(id){
         if(self.pressingAttack){
             self.shootBullet(self.mouseAngle);
         }
+
+        if(self.pressingShield){
+            self.shootShield(self.mouseAngle);
+        }
     }
 
     self.shootBullet = function(angle){ //bullet shoot function, which links to the bullet spawn
         var b = Bullet(angle);
+            b.x = self.x; //set position to center of current player
+            b.y = self.y;
+    }
+
+    self.shootShield = function(angle){ //bullet shoot function, which links to the bullet spawn
+        var b = Shield(angle);
             b.x = self.x; //set position to center of current player
             b.y = self.y;
     }
@@ -137,6 +147,11 @@ Player.onConnect = function(socket){
             player.pressingAttack = data.state;
         else if(data.inputId === 'mouseAngle')
             player.mouseAngle = data.state;
+        
+        //mouse shield
+        else if(data.inputId === 'shield')
+            player.pressingShield = data.state;
+            
     });
 
 }
@@ -171,7 +186,7 @@ var Bullet = function(angle){
     self.toRemove = false;
     var super_update = self.update;
     self.update = function(){
-        if(self.timer++ > 100) //increment and compare
+        if(self.timer++ > 0.1) //increment and compare
             self.toRemove = true;
         super_update();
     }
@@ -204,10 +219,57 @@ Bullet.update = function(){
     return pack;
 }
 
+//Shield
+var Shield = function(angle){
+    var self = Entity();
+    self.id = Math.random();
+    self.spdX = Math.cos(angle/180*Math.PI)*10;
+    self.spdY = Math.sin(angle/180*Math.PI)*10;
+
+    self.timer = 0;
+    self.toRemove = false;
+    var super_update = self.update;
+    self.update = function(){
+        if(self.timer++ > 0.1) //increment and compare
+            self.toRemove = true;
+        super_update();
+    }
+    Shield.list[self.id] = self;
+    return self;
+}
+Shield.list = {};
+
+Shield.update = function(){
+
+    
+    /*if(Math.random()<0.1){
+        Shield(Math.random()*360); //generate Enemy
+    }*/
+
+    var pack = []; //create a new clean package of data to send out every frame
+
+    //calculate and put into package
+    for(var i in Shield.list){ //increment positions
+        var shield = Shield.list[i];
+        shield.update();
+
+        if (shield.toRemove == true) delete Shield.list[i]; //remove bullet properly
+
+        pack.push({ //push data of new position into packet
+            x:shield.x,
+            y:shield.y,
+        });
+    }
+    return pack;
+}
+//Shield End
+
 //Enemy
 var Enemy = function(angle){ //Generates an enemy
     var self = Entity();
     self.id = Math.random();
+    self.x = Math.random()*500;
+    self.y = Math.random()*500;
     self.spdX = Math.cos(angle/180*Math.PI)*Math.random()*10;
     self.spdY = Math.sin(angle/180*Math.PI)*Math.random()*10;
 
@@ -306,6 +368,7 @@ setInterval(function(){ //for every 40ms/ every frame...
         player:Player.update(),
         bullet:Bullet.update(),
         enemy:Enemy.update(),
+        shield:Shield.update(),
     }
     
         
@@ -326,10 +389,6 @@ setInterval(function(){ //for every 40ms/ every frame...
 },1000/25);
 
 
-//add enemies next, spawn and move randomly
+//next collision
 //making black red.
 //skipped chat ep6
-
-//next to do
-//right click dash (+attack)
-//next next different mobs
