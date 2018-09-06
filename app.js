@@ -97,6 +97,10 @@ var Player = function(id){
         if(self.pressingShield){
             self.shootShield(self.mouseAngle);
         }
+
+        if(self.pressingShield){
+            self.shootTurrent(self.mouseAngle);
+        }
     }
 
     self.shootBullet = function(angle){ //bullet shoot function, which links to the bullet spawn
@@ -107,6 +111,12 @@ var Player = function(id){
 
     self.shootShield = function(angle){ //bullet shoot function, which links to the bullet spawn
         var b = Shield(angle);
+            b.x = self.x; //set position to center of current player
+            b.y = self.y;
+    }
+
+    self.shootTurrent = function(angle){ //bullet shoot function, which links to the bullet spawn
+        var b = Turrent(angle);
             b.x = self.x; //set position to center of current player
             b.y = self.y;
     }
@@ -264,6 +274,51 @@ Shield.update = function(){
 }
 //Shield End
 
+//Turrent
+var Turrent = function(angle){
+    var self = Entity();
+    self.id = Math.random();
+    self.spdX = Math.cos(angle/180*Math.PI)*10;
+    self.spdY = Math.sin(angle/180*Math.PI)*10;
+
+    self.timer = 0;
+    self.toRemove = false;
+    var super_update = self.update;
+    self.update = function(){
+        if(self.timer++ > 0.1) //increment and compare
+            self.toRemove = true;
+        super_update();
+    }
+    Turrent.list[self.id] = self;
+    return self;
+}
+Turrent.list = {};
+
+Turrent.update = function(){
+
+    
+    /*if(Math.random()<0.1){
+        Shield(Math.random()*360); //generate Enemy
+    }*/
+
+    var pack = []; //create a new clean package of data to send out every frame
+
+    //calculate and put into package
+    for(var i in Turrent.list){ //increment positions
+        var turrent = Turrent.list[i];
+        turrent.update();
+
+        if (turrent.toRemove == true) delete Turrent.list[i]; //remove bullet properly
+
+        pack.push({ //push data of new position into packet
+            x:turrent.x,
+            y:turrent.y,
+        });
+    }
+    return pack;
+}
+//Turrent End
+
 //Enemy
 var Enemy = function(angle){ //Generates an enemy
     var self = Entity();
@@ -369,6 +424,7 @@ setInterval(function(){ //for every 40ms/ every frame...
         bullet:Bullet.update(),
         enemy:Enemy.update(),
         shield:Shield.update(),
+        turrent:Turrent.update(),
     }
     
         
