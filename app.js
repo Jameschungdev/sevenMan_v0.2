@@ -196,7 +196,7 @@ var Bullet = function(angle){
     self.toRemove = false;
     var super_update = self.update;
     self.update = function(){
-        if(self.timer++ > 0.1) //increment and compare
+        if(self.timer++ > 100) //increment and compare //change to shorter time for sword
             self.toRemove = true;
         super_update();
     }
@@ -278,14 +278,22 @@ Shield.update = function(){
 var Turrent = function(angle){
     var self = Entity();
     self.id = Math.random();
-    self.spdX = Math.cos(angle/180*Math.PI)*10;
-    self.spdY = Math.sin(angle/180*Math.PI)*10;
+    self.x=50;
+    self.y=50;
+
+    /*self.shootBullet = function(angle){ //bullet shoot function, which links to the bullet spawn
+        var b = Bullet(angle);
+            b.x = self.x; //set position to center of current player
+            b.y = self.y;
+    }*/
+    
+    //self.shootBullet(Math.random()*360);
 
     self.timer = 0;
     self.toRemove = false;
     var super_update = self.update;
     self.update = function(){
-        if(self.timer++ > 0.1) //increment and compare
+        if(self.timer++ > 100) //increment and compare
             self.toRemove = true;
         super_update();
     }
@@ -298,8 +306,9 @@ Turrent.update = function(){
 
     
     /*if(Math.random()<0.1){
-        Shield(Math.random()*360); //generate Enemy
+        Enemy(Math.random()*360); //generate Enemy
     }*/
+
 
     var pack = []; //create a new clean package of data to send out every frame
 
@@ -448,3 +457,6 @@ setInterval(function(){ //for every 40ms/ every frame...
 //next collision
 //making black red.
 //skipped chat ep6
+
+//make turrent shoot
+//fix mouse differienator, 1,2,3
